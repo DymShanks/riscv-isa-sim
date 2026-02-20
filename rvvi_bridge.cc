@@ -2,6 +2,12 @@
 #include <stdint.h>
 #include "rvvi/rvviApi.h"
 
+// Bring in Spike's actual internal architecture headers
+#include "riscv/processor.h" 
+
+// This pointer will eventually link our RVVI bridge to the live Spike core
+processor_t* global_core = nullptr;
+
 // 1. Initialization
 extern "C" bool_t rvviRefInit(const char* config) {
     printf("RVVI Bridge: Spike is officially listening!\n");
@@ -10,12 +16,18 @@ extern "C" bool_t rvviRefInit(const char* config) {
 
 // 2. Program Counter (PC) Extraction
 extern "C" uint64_t rvviRefPcGet(uint32_t hartid) {
-    // TODO: Hook into Spike's processor_t->get_state()->pc
-    return 0x80000000; // Return dummy boot PC for now
+    if (global_core) {
+        // Extract the live PC directly from Spike's state!
+        return global_core->get_state()->pc; 
+    }
+    return 0; 
 }
 
 // 3. General Purpose Register (GPR) Extraction
 extern "C" uint64_t rvviRefGprGet(uint32_t hartid, uint32_t index) {
-    // TODO: Hook into Spike's processor_t->get_state()->XPR[index]
-    return 0; // Return dummy register value for now
+    if (global_core) {
+        // Extract the live Register value directly from Spike's state!
+        return global_core->get_state()->XPR[index]; 
+    }
+    return 0; 
 }
